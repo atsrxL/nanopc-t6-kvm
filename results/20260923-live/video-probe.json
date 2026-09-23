@@ -1,0 +1,213 @@
+{
+  "capabilities": {
+    "min_width": 640,
+    "max_width": 4096,
+    "min_height": 480,
+    "max_height": 2160,
+    "min_pixelclock": 20000000,
+    "max_pixelclock": 600000000,
+    "standards": 1,
+    "flags": 3
+  },
+  "current_input": "[Errno 67] Link has been severed",
+  "enumerated_timings": [
+    {
+      "width": 640,
+      "height": 480,
+      "interlaced": false,
+      "pixelclock": 25175000,
+      "progressive_fps": 59.94
+    },
+    {
+      "width": 720,
+      "height": 480,
+      "interlaced": false,
+      "pixelclock": 27000000,
+      "progressive_fps": 59.94
+    },
+    {
+      "width": 720,
+      "height": 576,
+      "interlaced": false,
+      "pixelclock": 27000000,
+      "progressive_fps": 50.0
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "interlaced": false,
+      "pixelclock": 59400000,
+      "progressive_fps": 24.0
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "interlaced": false,
+      "pixelclock": 74250000,
+      "progressive_fps": 25.0
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "interlaced": false,
+      "pixelclock": 74250000,
+      "progressive_fps": 30.0
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "interlaced": false,
+      "pixelclock": 74250000,
+      "progressive_fps": 50.0
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "interlaced": false,
+      "pixelclock": 74250000,
+      "progressive_fps": 60.0
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "interlaced": false,
+      "pixelclock": 74250000,
+      "progressive_fps": 24.0
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "interlaced": false,
+      "pixelclock": 74250000,
+      "progressive_fps": 25.0
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "interlaced": false,
+      "pixelclock": 74250000,
+      "progressive_fps": 30.0
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "interlaced": true,
+      "pixelclock": 74250000,
+      "progressive_fps": null
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "interlaced": false,
+      "pixelclock": 148500000,
+      "progressive_fps": 50.0
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "interlaced": true,
+      "pixelclock": 74250000,
+      "progressive_fps": null
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "interlaced": false,
+      "pixelclock": 148500000,
+      "progressive_fps": 60.0
+    },
+    {
+      "width": 3840,
+      "height": 2160,
+      "interlaced": false,
+      "pixelclock": 297000000,
+      "progressive_fps": 24.0
+    },
+    {
+      "width": 3840,
+      "height": 2160,
+      "interlaced": false,
+      "pixelclock": 297000000,
+      "progressive_fps": 25.0
+    },
+    {
+      "width": 3840,
+      "height": 2160,
+      "interlaced": false,
+      "pixelclock": 297000000,
+      "progressive_fps": 30.0
+    },
+    {
+      "width": 3840,
+      "height": 2160,
+      "interlaced": false,
+      "pixelclock": 594000000,
+      "progressive_fps": 50.0
+    },
+    {
+      "width": 3840,
+      "height": 2160,
+      "interlaced": false,
+      "pixelclock": 594000000,
+      "progressive_fps": 60.0
+    },
+    {
+      "width": 4096,
+      "height": 2160,
+      "interlaced": false,
+      "pixelclock": 297000000,
+      "progressive_fps": 24.0
+    },
+    {
+      "width": 4096,
+      "height": 2160,
+      "interlaced": false,
+      "pixelclock": 297000000,
+      "progressive_fps": 25.0
+    },
+    {
+      "width": 4096,
+      "height": 2160,
+      "interlaced": false,
+      "pixelclock": 297000000,
+      "progressive_fps": 30.0
+    },
+    {
+      "width": 4096,
+      "height": 2160,
+      "interlaced": false,
+      "pixelclock": 594000000,
+      "progressive_fps": 50.0
+    },
+    {
+      "width": 4096,
+      "height": 2160,
+      "interlaced": false,
+      "pixelclock": 594000000,
+      "progressive_fps": 60.0
+    }
+  ],
+  "timing_enumeration_end": "[Errno 22] Invalid argument",
+  "formats": [
+    "BGR3",
+    "NV24",
+    "NV16",
+    "NV12"
+  ],
+  "edid_blocks": 2,
+  "edid_hex": "00ffffffffffff0049708835010000002d1f0103807844780acf74a3574cb02309484c2108006140010181009500a9c0010101010101023a801871382d40582c450020c23100001e011d007251d01e206e28550020c23100001e000000fc00524b2d5548440a202020202020000000fd003b461f8c3c000a20202020202001a702032ed151071614050103121384221f905d5e5f6061230907078301000067030c0030000044e3050301e30e6061023a801871382d40582c450020c23100001e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000f2",
+  "base_edid_detailed_timings": [
+    {
+      "width": 1920,
+      "height": 1080,
+      "pixelclock": 148500000,
+      "fps": 60.0
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "pixelclock": 74250000,
+      "fps": 60.0
+    }
+  ]
+}

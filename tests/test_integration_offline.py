@@ -60,10 +60,10 @@ class PatchTests(unittest.IsolatedAsyncioTestCase):
     def test_annotated_upstream_streamers_assignment(self):
         source='from .server import VncServer\ndef main():\n    streamers: list[BaseStreamerClient] = []\n    use(streamers)\n'
         result=patch.transform_init(source)
-        self.assertIn('streamers = [T6StreamerClient()]',result);compile(result,'fixture','exec')
+        self.assertIn('streamers = [T6StreamerClient(), T6JpegStreamerClient()]',result);compile(result,'fixture','exec')
     def test_plain_assignment_supported(self):
         source='from .server import VncServer\ndef main():\n    streamers = []\n'
-        self.assertIn('[T6StreamerClient()]',patch.transform_init(source))
+        self.assertIn('[T6StreamerClient(), T6JpegStreamerClient()]',patch.transform_init(source))
     def test_missing_or_duplicate_anchor_rejected(self):
         for source in ('missing','xx anchor yy anchor'):
             with self.assertRaises(ValueError): patch.one(source,'anchor','replace')
@@ -77,10 +77,13 @@ class PatchTests(unittest.IsolatedAsyncioTestCase):
         await c._on_set_encodings();await c._on_set_encodings()
         c._Client__kvmd_session.streamer.get_state.assert_awaited_once()
         c._Client__kvmd_session.streamer.set_params.assert_awaited_once_with(None,60)
-    async def test_missing_h264_fails_without_live_jpeg_fallback(self):
+    async def test_jpeg_client_without_h264_is_accepted(self):
         c,_=transformed_client();c._encodings.has_h264=False
-        with self.assertRaisesRegex(RuntimeError,'H264'): await c._on_set_encodings()
-        c._Client__kvmd_session.streamer.set_params.assert_not_awaited()
+        await c._on_set_encodings()
+        c._Client__stage2_encodings_accepted.set_passed.assert_called_once_with(multi=True)
+    async def test_missing_tight_is_rejected(self):
+        c,_=transformed_client();c._encodings.has_tight=False
+        with self.assertRaisesRegex(RuntimeError,'Tight'):await c._on_set_encodings()
     async def test_bad_password_never_calls_admission(self):
         c,n=transformed_client();c._Client__kvmd_session.auth.check.return_value=False
         self.assertFalse(await c._authorize_userpass('operator','wrong'))
@@ -96,13 +99,16 @@ class PatchTests(unittest.IsolatedAsyncioTestCase):
         c,_=transformed_client();self.assertFalse(await c._authorize_none())
     def test_tls_patch_fail_closed(self):
         text='''class RfbClient:
+    def __init__(self):
+        self.__symmap: dict[int, dict[int, int]] = {}
     async def auth(self):
         await self._write_struct("VeNCrypt auth types list", "B" + "L" * len(auth_types), len(auth_types), *auth_types)
         user = (await self._read_text("VeNCrypt user", user_length)).strip()
 '''
         out=patch.transform_rfb(text);compile(out,'fixture','exec')
-        self.assertIn('auth_types = {262: auth_types[262]}',out)
+        self.assertIn('selected_auth = 262 if self.__x509_cert_path else 256',out)
         self.assertIn('passwd_length <= 4096',out)
+        self.assertIn('self.__symmap: (dict[int, dict[int, int]] | None) = None',out)
 
 class AdminTests(unittest.TestCase):
     def test_backup_rotates_only_owned_two(self):

@@ -105,10 +105,15 @@ class Broker:
     def publish(self, frame: Frame):
         if frame.kind != AU:
             info = json.loads(frame.data)
+            if "input_path" in info:
+                self.state["copy_mode"] = info["input_path"]
+                return
             if "input" in info:
                 self.state["input"] = info["input"]
             if "capture_frames" in info:
                 self.state["capture_frames_worker"] = info["capture_frames"]
+            if "capture_frames" in info:
+                info["copy"] = self.state.get("copy_mode") != "DMABUF import"
             self.state["worker_status"] = info
             if not info.get("online",False):
                 self.status(str(info.get("message","No input signal")))
@@ -260,12 +265,17 @@ async def run(config):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--version", action="version", version="t6-streamer 0.1.0")
+    parser.add_argument("--features", action="store_true")
     parser.add_argument("--config",default="/etc/t6-kvm/streamer.toml")
     parser.add_argument("--unix")
     parser.add_argument("--desired-fps",type=int)
     parser.add_argument("--h264-bitrate",type=int)
     parser.add_argument("--h264-gop",type=int)
     args = parser.parse_args()
+    if args.features:
+        print("+ H264\n- JPEG\n- RGA")
+        return
     config = load(args.config)
     override = {k:v for k,v in (("http_socket",args.unix),("fps",args.desired_fps),
                 ("bitrate_kbps",args.h264_bitrate),("gop",args.h264_gop)) if v is not None}

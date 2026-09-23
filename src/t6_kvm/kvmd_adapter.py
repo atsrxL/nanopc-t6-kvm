@@ -8,7 +8,7 @@ from .config import load
 from .protocol import read_frame, Frame, AU, RecoveryGate, H264, ProtocolError
 from .buffer import FrameBuffer
 from .ownership import Owner, Lease
-from kvmd.clients.streamer import BaseStreamerClient, StreamerTempError
+from kvmd.clients.streamer import BaseStreamerClient, StreamerTempError, StreamerFormats
 
 CONFIG = os.environ.get("T6_KVM_CONFIG","/etc/t6-kvm/streamer.toml")
 _owner = None
@@ -97,3 +97,56 @@ class VncFrameBuffer:
         if value.kind != AU:
             return self.jpeg
         return value.kvmd()
+
+class T6JpegStreamerClient(BaseStreamerClient):
+    """Decode the shared H264 stream; encode independent JPEGs only on demand."""
+    def __init__(self):
+        self.source = T6StreamerClient()
+
+    def __str__(self):
+        return "T6 Tight/JPEG compatibility (15 fps cap)"
+
+    def get_format(self):
+        return StreamerFormats.JPEG
+
+    @contextlib.asynccontextmanager
+    async def reading(self):
+        import av
+        import io
+        decoder = av.CodecContext.create("h264", "r")
+        decoder.thread_count = 2
+        decoder.thread_type = "SLICE"
+        last_jpeg = 0.0
+        epoch = None
+
+        def convert(frame, emit):
+            pictures = decoder.decode(av.Packet(frame["data"]))
+            if not pictures or not emit:
+                return None
+            picture = pictures[-1]
+            output = io.BytesIO()
+            picture.to_image().save(output, format="JPEG", quality=70)
+            return {"online": True, "width": picture.width, "height": picture.height,
+                    "format": StreamerFormats.JPEG, "data": output.getvalue()}
+
+        async with self.source.reading() as read:
+            async def receive(_key_required):
+                nonlocal last_jpeg, decoder, epoch
+                while True:
+                    frame = await read(False)
+                    if epoch != frame["t6_epoch"] or frame.get("key"):
+                        # Every key AU includes SPS/PPS, also recovering queue loss.
+                        decoder = av.CodecContext.create("h264", "r")
+                        decoder.thread_count = 2
+                        decoder.thread_type = "SLICE"
+                        epoch = frame["t6_epoch"]
+                    now = time.monotonic()
+                    try:
+                        result = await asyncio.to_thread(convert, frame, now-last_jpeg >= 1/15)
+                    except av.FFmpegError as ex:
+                        self.source.request_key()
+                        raise StreamerTempError(str(ex)) from ex
+                    if result is not None:
+                        last_jpeg = now
+                        return result
+            yield receive

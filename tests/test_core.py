@@ -32,7 +32,7 @@ class ConfigTests(unittest.TestCase):
     def test_no_fake_zero_copy(self):
         with self.assertRaises(ValueError): dataclasses.replace(Config(),copy_mode="zero-copy").validate()
     def test_boundaries(self):
-        for change in ({"fps":0},{"fps":True},{"gop":0},{"max_height":2160},
+        for change in ({"fps":0},{"fps":True},{"gop":0},{"max_height":2162},
                        {"expected_width":2560},{"queue_frames":9},{"bitrate_kbps":35001},
                        {"device":"relative"},{"expected_width":1919,"expected_height":1080},
                        {"http_socket":"/tmp/s","frame_socket":"/tmp/s"},
@@ -42,6 +42,16 @@ class ConfigTests(unittest.TestCase):
     def test_native_bitrate_units(self):
         c=Config(); argv=c.native_argv()
         self.assertEqual(argv[argv.index("--bitrate")+1],"20000000")
+    def test_native_1600_dimensions(self):
+        c=dataclasses.replace(Config(),max_width=2560,max_height=1600,
+                              expected_width=2560,expected_height=1600).validate()
+        self.assertIn("1600",c.native_argv())
+    def test_native_4k_dimensions(self):
+        c=dataclasses.replace(Config(),max_width=3840,max_height=2160,
+                              expected_width=3840,expected_height=2160).validate()
+        self.assertIn("3840",c.native_argv())
+        self.assertIn("2160",c.native_argv())
+        with self.assertRaises(ValueError):dataclasses.replace(c,max_width=4096).validate()
     def test_1440_does_not_pretend_1080(self):
         c=dataclasses.replace(Config(),max_width=2560,max_height=1440,
                               expected_width=2560,expected_height=1440).validate()

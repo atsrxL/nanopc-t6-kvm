@@ -1,0 +1,125 @@
+Sep 23 12:29:50 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.server              INFO --- [127.0.0.1]:56078 [entry]: Connected client
+Sep 23 12:29:50 nanopct6-lts t6-kvmd[4121922]: aiohttp.access                    INFO --- [- / -] 'GET /auth/check HTTP/1.1' => 401; size=287 --- referer='-'; user_agent='KVMD-VNC/4.120'
+Sep 23 12:29:50 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56078 [entry]: Starting client tasks ...
+Sep 23 12:29:50 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56078 [main]: Using RFB version 3.8
+Sep 23 12:29:50 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56078 [main]: Using VeNCrypt security type
+Sep 23 12:29:50 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56078 [main]: Using VeNCrypt/X509Plain auth type
+Sep 23 12:29:50 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56078 [main]: Starting TLS (valid) ...
+Sep 23 12:29:50 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.auth               INFO --- Authorized user 'operator' via auth service 'htpasswd'
+Sep 23 12:29:50 nanopct6-lts t6-kvmd[4121922]: aiohttp.access                    INFO --- [operator (xhdr) / -] 'GET /auth/check HTTP/1.1' => 200; size=196 --- referer='-'; user_agent='KVMD-VNC/4.120'
+Sep 23 12:29:50 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56078 [main]: Access granted for user 'operator'
+Sep 23 12:29:50 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.server              INFO --- [127.0.0.1]:56078 [kvmd]: Waiting for the SetEncodings message ...
+Sep 23 12:29:50 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56078 [main]: Client features (SetEncodings):
+Sep 23 12:29:50 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56078 [main]: ... encodings -- [-308, -223, -32, 7, 50]
+Sep 23 12:29:50 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56078 [main]: ... has_resize [-223] -- True
+Sep 23 12:29:50 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56078 [main]: ... has_rename [] -- False
+Sep 23 12:29:50 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56078 [main]: ... has_leds_state [] -- False
+Sep 23 12:29:50 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56078 [main]: ... has_ext_keys [] -- False
+Sep 23 12:29:50 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56078 [main]: ... has_ext_mouse [] -- False
+Sep 23 12:29:50 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56078 [main]: ... has_cont_updates [] -- False
+Sep 23 12:29:50 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56078 [main]: ... has_tight [7] -- True
+Sep 23 12:29:50 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56078 [main]: ... tight_jpeg_quality [-32] -- 10
+Sep 23 12:29:50 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56078 [main]: ... has_h264 [50] -- True
+Sep 23 12:29:50 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.server              INFO --- [127.0.0.1]:56094 [entry]: Connected client
+Sep 23 12:29:50 nanopct6-lts t6-kvmd[4121922]: aiohttp.access                    INFO --- [t6-kvm[999] (unix) / -] 'GET /streamer HTTP/1.1' => 200; size=852 --- referer='-'; user_agent='KVMD-VNC/4.120'
+Sep 23 12:29:50 nanopct6-lts t6-kvmd[4121922]: aiohttp.access                    INFO --- [- / -] 'GET /auth/check HTTP/1.1' => 401; size=287 --- referer='-'; user_agent='KVMD-VNC/4.120'
+Sep 23 12:29:50 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56094 [entry]: Starting client tasks ...
+Sep 23 12:29:51 nanopct6-lts t6-kvmd[4121922]: aiohttp.access                    INFO --- [t6-kvm[999] (unix) / -] 'POST /streamer/set_params?desired_fps=60 HTTP/1.1' => 200; size=196 --- referer='-'; user_agent='KVMD-VNC/4.120'
+Sep 23 12:29:51 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.server              INFO --- [127.0.0.1]:56078 [T6]: negotiated H264=True, fps cap=60
+Sep 23 12:29:51 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56094 [main]: Using RFB version 3.8
+Sep 23 12:29:51 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.server              INFO --- [127.0.0.1]:56078 [kvmd]: Applying HID params: mouse_output=usb ...
+Sep 23 12:29:51 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56094 [main]: Using VeNCrypt security type
+Sep 23 12:29:51 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56094 [main]: Using VeNCrypt/X509Plain auth type
+Sep 23 12:29:51 nanopct6-lts t6-kvmd[4121922]: aiohttp.access                    INFO --- [t6-kvm[999] (unix) / -] 'POST /hid/set_params?mouse_output=usb HTTP/1.1' => 200; size=196 --- referer='-'; user_agent='KVMD-VNC/4.120'
+Sep 23 12:29:51 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56094 [main]: Starting TLS (valid) ...
+Sep 23 12:29:51 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.server             INFO --- Registered new client session: WsSession(id=281473746114208, {'stream': True}); clients now: 1
+Sep 23 12:29:51 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.server              INFO --- [127.0.0.1]:56078 [kvmd]: Connected to KVMD websocket
+Sep 23 12:29:51 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.server              INFO --- [127.0.0.1]:56078 [streamer]: Using preferred T6 ordered MPP H264
+Sep 23 12:29:51 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.server              INFO --- [127.0.0.1]:56078 [streamer]: Waiting for stream: [Errno 2] No such file or directory
+Sep 23 12:29:51 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- Starting streamer ...
+Sep 23 12:29:51 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- PRE-START-CMD: /bin/true pre-start
+Sep 23 12:29:51 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.auth              ERROR --- Got access denied for user 'operator' from auth service 'htpasswd'
+Sep 23 12:29:51 nanopct6-lts t6-kvmd[4121922]: aiohttp.access                    INFO --- [operator (xhdr) / -] 'GET /auth/check HTTP/1.1' => 403; size=278 --- referer='-'; user_agent='KVMD-VNC/4.120'
+Sep 23 12:29:51 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                ERROR --- [127.0.0.1]:56094 [main]: Error: Access denied for user 'operator'
+Sep 23 12:29:51 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56094 [kvmd]: Cancelling subtask ...
+Sep 23 12:29:51 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56094 [streamer]: Cancelling subtask ...
+Sep 23 12:29:51 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56094 [fb_sender]: Cancelling subtask ...
+Sep 23 12:29:51 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56094 [entry]: Connection closed
+Sep 23 12:29:51 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- Started streamer pid=4123404: /opt/t6-kvm/current/bin/t6-streamer --config /etc/t6-kvm/streamer.toml --unix /run/t6-kvm/streamer.sock --desired-fps 60 --h264-bitrate 20000 --h264-gop 60
+Sep 23 12:29:51 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- => t6: worker error (errno=67: Link has been severed); supervisor may retry
+Sep 23 12:29:51 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- => 2026-09-23 12:29:51,954 t6-streamer WARNING Capture stopped: 0 bytes read on a total of 48 expected bytes
+Sep 23 12:29:53 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.server              INFO --- [127.0.0.1]:56078 [streamer]: Waiting for stream: {"online":false,"message":"Starting capture worker"}
+Sep 23 12:29:53 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- => t6: worker error (errno=67: Link has been severed); supervisor may retry
+Sep 23 12:29:53 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- => 2026-09-23 12:29:53,972 t6-streamer WARNING Capture stopped: 0 bytes read on a total of 48 expected bytes
+Sep 23 12:29:54 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.server              INFO --- [127.0.0.1]:56102 [entry]: Connected client
+Sep 23 12:29:54 nanopct6-lts t6-kvmd[4121922]: aiohttp.access                    INFO --- [- / -] 'GET /auth/check HTTP/1.1' => 401; size=287 --- referer='-'; user_agent='KVMD-VNC/4.120'
+Sep 23 12:29:54 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56102 [entry]: Starting client tasks ...
+Sep 23 12:29:54 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56102 [main]: Using RFB version 3.8
+Sep 23 12:29:54 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56102 [main]: Using VeNCrypt security type
+Sep 23 12:29:54 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56102 [main]: Using VeNCrypt/X509Plain auth type
+Sep 23 12:29:54 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56102 [main]: Starting TLS (valid) ...
+Sep 23 12:29:55 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.auth               INFO --- Authorized user 'operator' via auth service 'htpasswd'
+Sep 23 12:29:55 nanopct6-lts t6-kvmd[4121922]: aiohttp.access                    INFO --- [operator (xhdr) / -] 'GET /auth/check HTTP/1.1' => 200; size=196 --- referer='-'; user_agent='KVMD-VNC/4.120'
+Sep 23 12:29:55 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56078 [main]: Cancelling subtask ...
+Sep 23 12:29:55 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56078 [fb_sender]: Cancelling subtask ...
+Sep 23 12:29:55 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.server             INFO --- Removed client socket: WsSession(id=281473746114208, {'stream': True}); clients now: 0
+Sep 23 12:29:55 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56078 [streamer]: Cancelling subtask ...
+Sep 23 12:29:55 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56078 [kvmd]: Cancelling subtask ...
+Sep 23 12:29:55 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56078 [entry]: Connection closed
+Sep 23 12:29:55 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56102 [main]: Access granted for user 'operator'
+Sep 23 12:29:55 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.server              INFO --- [127.0.0.1]:56102 [kvmd]: Waiting for the SetEncodings message ...
+Sep 23 12:29:55 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56102 [main]: Client features (SetEncodings):
+Sep 23 12:29:55 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56102 [main]: ... encodings -- [-308, -223, -32, 7, 50]
+Sep 23 12:29:55 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56102 [main]: ... has_resize [-223] -- True
+Sep 23 12:29:55 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56102 [main]: ... has_rename [] -- False
+Sep 23 12:29:55 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56102 [main]: ... has_leds_state [] -- False
+Sep 23 12:29:55 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56102 [main]: ... has_ext_keys [] -- False
+Sep 23 12:29:55 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56102 [main]: ... has_ext_mouse [] -- False
+Sep 23 12:29:55 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56102 [main]: ... has_cont_updates [] -- False
+Sep 23 12:29:55 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56102 [main]: ... has_tight [7] -- True
+Sep 23 12:29:55 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56102 [main]: ... tight_jpeg_quality [-32] -- 10
+Sep 23 12:29:55 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56102 [main]: ... has_h264 [50] -- True
+Sep 23 12:29:55 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- Planning to stop streamer in 10.00 seconds ...
+Sep 23 12:29:55 nanopct6-lts t6-kvmd[4121922]: aiohttp.access                    INFO --- [t6-kvm[999] (unix) / -] 'GET /ws?stream=1 HTTP/1.1' => 101; size=0 --- referer='-'; user_agent='KVMD-VNC/4.120'
+Sep 23 12:29:55 nanopct6-lts t6-kvmd[4121922]: aiohttp.access                    INFO --- [t6-kvm[999] (unix) / -] 'GET /streamer HTTP/1.1' => 200; size=1982 --- referer='-'; user_agent='KVMD-VNC/4.120'
+Sep 23 12:29:55 nanopct6-lts t6-kvmd[4121922]: aiohttp.access                    INFO --- [t6-kvm[999] (unix) / -] 'POST /streamer/set_params?desired_fps=60 HTTP/1.1' => 200; size=196 --- referer='-'; user_agent='KVMD-VNC/4.120'
+Sep 23 12:29:55 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.server              INFO --- [127.0.0.1]:56102 [T6]: negotiated H264=True, fps cap=60
+Sep 23 12:29:55 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.server              INFO --- [127.0.0.1]:56102 [kvmd]: Applying HID params: mouse_output=usb ...
+Sep 23 12:29:55 nanopct6-lts t6-kvmd[4121922]: aiohttp.access                    INFO --- [t6-kvm[999] (unix) / -] 'POST /hid/set_params?mouse_output=usb HTTP/1.1' => 200; size=196 --- referer='-'; user_agent='KVMD-VNC/4.120'
+Sep 23 12:29:55 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.server             INFO --- Registered new client session: WsSession(id=281473746101392, {'stream': True}); clients now: 1
+Sep 23 12:29:55 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.server              INFO --- [127.0.0.1]:56102 [kvmd]: Connected to KVMD websocket
+Sep 23 12:29:55 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.server              INFO --- [127.0.0.1]:56102 [streamer]: Using preferred T6 ordered MPP H264
+Sep 23 12:29:55 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- Streamer stop cancelled
+Sep 23 12:29:55 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.server              INFO --- [127.0.0.1]:56102 [streamer]: Waiting for stream: {"online":false,"message":"Starting capture worker"}
+Sep 23 12:29:55 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- => t6: worker error (errno=67: Link has been severed); supervisor may retry
+Sep 23 12:29:55 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- => 2026-09-23 12:29:55,995 t6-streamer WARNING Capture stopped: 0 bytes read on a total of 48 expected bytes
+Sep 23 12:29:57 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.server              INFO --- [127.0.0.1]:56102 [streamer]: Waiting for stream: {"online":false,"message":"Starting capture worker"}
+Sep 23 12:29:58 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- => t6: worker error (errno=67: Link has been severed); supervisor may retry
+Sep 23 12:29:58 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- => 2026-09-23 12:29:58,017 t6-streamer WARNING Capture stopped: 0 bytes read on a total of 48 expected bytes
+Sep 23 12:30:00 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.server              INFO --- [127.0.0.1]:56102 [streamer]: Waiting for stream: {"online":false,"message":"Starting capture worker"}
+Sep 23 12:30:00 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- => t6: worker error (errno=67: Link has been severed); supervisor may retry
+Sep 23 12:30:00 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- => 2026-09-23 12:30:00,037 t6-streamer WARNING Capture stopped: 0 bytes read on a total of 48 expected bytes
+Sep 23 12:30:02 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.server              INFO --- [127.0.0.1]:56102 [streamer]: Waiting for stream: {"online":false,"message":"Starting capture worker"}
+Sep 23 12:30:02 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- => t6: worker error (errno=67: Link has been severed); supervisor may retry
+Sep 23 12:30:02 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- => 2026-09-23 12:30:02,060 t6-streamer WARNING Capture stopped: 0 bytes read on a total of 48 expected bytes
+Sep 23 12:30:03 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56102 [main]: Gone: Can't read incoming message type: ConnectionResetError: [Errno 104] Connection reset by peer
+Sep 23 12:30:03 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56102 [fb_sender]: Cancelling subtask ...
+Sep 23 12:30:03 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.server             INFO --- Removed client socket: WsSession(id=281473746101392, {'stream': True}); clients now: 0
+Sep 23 12:30:03 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56102 [streamer]: Cancelling subtask ...
+Sep 23 12:30:03 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56102 [kvmd]: Cancelling subtask ...
+Sep 23 12:30:03 nanopct6-lts t6-kvmd-vnc[4121923]: kvmd.apps.vnc.rfb                 INFO --- [127.0.0.1]:56102 [entry]: Connection closed
+Sep 23 12:30:03 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- Planning to stop streamer in 10.00 seconds ...
+Sep 23 12:30:03 nanopct6-lts t6-kvmd[4121922]: aiohttp.access                    INFO --- [t6-kvm[999] (unix) / -] 'GET /ws?stream=1 HTTP/1.1' => 101; size=0 --- referer='-'; user_agent='KVMD-VNC/4.120'
+Sep 23 12:30:04 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- => t6: worker error (errno=67: Link has been severed); supervisor may retry
+Sep 23 12:30:04 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- => 2026-09-23 12:30:04,078 t6-streamer WARNING Capture stopped: 0 bytes read on a total of 48 expected bytes
+Sep 23 12:30:06 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- => t6: worker error (errno=67: Link has been severed); supervisor may retry
+Sep 23 12:30:06 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- => 2026-09-23 12:30:06,103 t6-streamer WARNING Capture stopped: 0 bytes read on a total of 48 expected bytes
+Sep 23 12:30:08 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- => t6: worker error (errno=67: Link has been severed); supervisor may retry
+Sep 23 12:30:08 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- => 2026-09-23 12:30:08,126 t6-streamer WARNING Capture stopped: 0 bytes read on a total of 48 expected bytes
+Sep 23 12:30:10 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- => t6: worker error (errno=67: Link has been severed); supervisor may retry
+Sep 23 12:30:10 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- => 2026-09-23 12:30:10,147 t6-streamer WARNING Capture stopped: 0 bytes read on a total of 48 expected bytes
+Sep 23 12:30:12 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- => t6: worker error (errno=67: Link has been severed); supervisor may retry
+Sep 23 12:30:12 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- => 2026-09-23 12:30:12,169 t6-streamer WARNING Capture stopped: 0 bytes read on a total of 48 expected bytes
+Sep 23 12:30:13 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- Stopping streamer after delay ...
+Sep 23 12:30:14 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- Process killed: retcode=0
+Sep 23 12:30:14 nanopct6-lts t6-kvmd[4121922]: kvmd.apps.kvmd.streamer.runner    INFO --- POST-STOP-CMD: /bin/true post-stop

@@ -1,3 +1,7 @@
+> 2026-09-23 实机更新：已部署 dev20260923g，1080p 实测约 58–59 fps，真实 TigerVNC 1.15.0 显示及 PC 键鼠事件验证通过。连接与运行方式见 [docs/USAGE.md](docs/USAGE.md)，证据见 results/20260923-live/STATUS.md。下文保留最初交接记录。
+
+> 2026-09-23 本地续作更新：已完成真实 ARM64 MPP/kvmd 构建，并部署 dev20260923c 到 T6。TLS、认证、接管、无信号提示、停止清理已做实机协议验证。HDMI ENOLINK、USB not attached，视频与实际键鼠仍未验收。最新证据见 results/20260923-live/STATUS.md；下文保留最初交接背景。
+
 # 接手指引：T6 KVM 0.1.0
 
 ## 给接手 Codex 的首要指令

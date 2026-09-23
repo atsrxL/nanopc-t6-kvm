@@ -1,0 +1,22 @@
+{
+  "input_to_encoded_frame_ms": [
+    66.99,
+    70.37,
+    70.57,
+    72.63,
+    76.36,
+    63.93,
+    81.95,
+    66.26,
+    68.67,
+    70.67
+  ],
+  "samples": 10,
+  "median_ms": 70.47,
+  "min_ms": 63.93,
+  "max_ms": 81.95,
+  "dequeue_to_encoded_delivery_ms_median": 13.683018000125886,
+  "fps": 58.81399506442042,
+  "transitions": 10,
+  "decoded_frames": 647
+}

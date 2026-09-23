@@ -7,7 +7,7 @@ name = "t6-kvm"
 version = "0.1.0"
 description = "Ordered RK3588 video bridge for a dedicated kvmd-vnc instance"
 requires-python = ">=3.13,<3.14"
-dependencies = ["aiohttp>=3.11,<4"]
+dependencies = ["aiohttp>=3.11,<4", "av==16.1.0", "Pillow>=11,<12"]
 license = {file = "LICENSE"}
 
 [project.scripts]

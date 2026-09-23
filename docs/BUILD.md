@@ -57,3 +57,17 @@ JOBS=2 PYTHON=python3 tools/build_target.sh \
 四个上游提交已固定；尚未锁定所有系统包和 Python 传递依赖及下载哈希。构建输出保存 `python-environment.txt`、`debian-environment.txt`、`native-linkage.txt`、补丁 diff 和逐文件 hash。首个真实成功构建后应补成完整依赖锁定／构建记录，再考虑发布可安装二进制。
 
 本次 x86 环境没有完整 upstream checkout，也无法解析 GitHub 域名进行下载；没有 MPP 头文件／库。网页层进行了源码接口核对，但这不等于完成实际 `git checkout`、编译链接或软件包导入。
+
+## 2026-09-23 实际构建补充
+
+在 MS-A2 VM 301 的 Debian trixie ARM64 容器（QEMU binfmt）完成固定 MPP 编译、t6-capture 链接、完整 kvmd 导入和配置检查，并在 NanoPC-T6 实机再次验证动态链接和服务启动。硬件视频验收仍须有效 HDMI 输入。
+
+构建工具：build-essential、cmake、git、pkg-config、libdrm-dev、python3-dev、python3-pip、python3-setuptools、python3-wheel。运行依赖实际使用：
+
+python3-venv python3-ruamel.yaml python3-aiohttp python3-aiofiles python3-async-lru python3-passlib python3-pyotp python3-pil python3-evdev python3-libgpiod python3-setproctitle python3-psutil python3-serial-asyncio python3-spidev python3-systemd python3-netifaces libxkbcommon0 python3-pygments python3-xlib python3-pyghmi python3-pam python3-dbus python3-dbus-next python3-zstandard python3-mako python3-hid python3-pyudev python3-usb
+
+这份列表是本次通过环境的记录，不是所有可选 kvmd 插件的依赖承诺。Debian pyghmi 为 1.5.70；本项目不启用 IPMI，未验证该可选功能。未安装可选 OCR libtesseract，启动时会提示 OCR 不可用。
+
+修复：C 测试目标在 Release 下保留断言；提供可重定位 t6-streamer wrapper 与 --version/--features；平台文件使用上游键值格式；专属 kvmd 补丁将 /bin/false 遥测视为未知，并修复 Python 3.13 TLS abort 后查询 SSL 信息的清理顺序。
+
+JPEG compatibility requires PyAV 16.1.0 and Pillow 11.x in Python 3.13. Prepare before offline build (--no-deps). Live deployment uses the aarch64 PyAV wheel with bundled FFmpeg for software decoding. JPEG encoding uses Pillow.

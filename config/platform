@@ -1,1 +1,3 @@
-T6-KVM experimental RK3588
+PIKVM_MODEL=T6-KVM experimental
+PIKVM_VIDEO=RK3588 HDMI RX
+PIKVM_BOARD=FriendlyElec NanoPC-T6 LTS

@@ -1,0 +1,10 @@
+[Unit]
+Description=Prepare approved T6 capture devices and owned USB HID gadget
+After=systemd-udev-settle.service
+Before=t6-kvmd.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/t6-kvm/current/venv/bin/python /opt/t6-kvm/current/tools/prepare_hardware.py
+RemainAfterExit=yes
+TimeoutStartSec=75

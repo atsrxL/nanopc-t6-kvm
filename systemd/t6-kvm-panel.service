@@ -1,0 +1,16 @@
+[Unit]
+Description=T6 KVM LAN administration panel
+After=network-online.target t6-kvmd.service
+Wants=network-online.target
+[Service]
+ExecStart=/opt/t6-kvm/current/venv/bin/python -m t6_kvm.panel
+Restart=on-failure
+UMask=0027
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/etc/t6-kvm /root/agent.backup
+ProtectHome=no
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,2 @@
+{"tls_certificate_verified": true, "only_x509plain": true, "valid_auth": true, "invalid_auth_rejected": true, "old_client_survives_wrong_password": true, "framebuffer_update_received": true}
+{"authenticated_takeover": true}

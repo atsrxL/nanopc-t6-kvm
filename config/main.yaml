@@ -46,9 +46,7 @@ kvmd:
     unix: /run/t6-kvm/streamer.sock
     process_name_prefix: t6-kvm/streamer
     cmd:
-      - /opt/t6-kvm/current/venv/bin/python
-      - -m
-      - t6_kvm.daemon
+      - /opt/t6-kvm/current/bin/t6-streamer
       - --config
       - /etc/t6-kvm/streamer.toml
       - --unix
@@ -95,15 +93,15 @@ vnc:
   mouse_output: usb
   keymap: /opt/t6-kvm/current/share/keymaps/en-us
   server:
-    host: 127.0.0.1 # Change explicitly only after certificate/client validation; no firewall edits
+    host: 127.0.0.1 # Change explicitly for LAN access; no firewall edits
     port: 5900
     max_clients: 10 # upstream listen backlog, NOT the active-controller limit
     no_delay: true
     tls:
-      ciphers: ECDHE+AESGCM:ECDHE+CHACHA20
+      ciphers: "" # Plain username/password by default; no TLS
       x509:
-        cert: /etc/t6-kvm/vnc.crt
-        key: /etc/t6-kvm/vnc.key
+        cert: "" # Configure certificate/key and ciphers to opt into X509Plain
+        key: ""
   auth:
     vncauth: {enabled: false}
     vencrypt: {enabled: true}

@@ -33,7 +33,7 @@ class Config:
             if type(default) is str and not isinstance(value, str):
                 raise ValueError(f"{f.name}: expected string")
         for name, lo, hi in (("fps",1,60),("bitrate_kbps",100,35000),("gop",1,120),
-                             ("max_width",64,2560),("max_height",64,1440),("queue_frames",1,8)):
+                             ("max_width",64,3840),("max_height",64,2160),("queue_frames",1,8)):
             if not lo <= getattr(self,name) <= hi:
                 raise ValueError(f"{name}: expected {lo}..{hi}")
         if isinstance(self.stall_seconds,bool) or not isinstance(self.stall_seconds,(int,float)) or not 2 <= self.stall_seconds <= 60:
@@ -48,7 +48,7 @@ class Config:
         if self.input_mode != "native":
             raise ValueError("Only native input is implemented; 4K→1440p/RGA scaling is NOT implemented")
         if self.copy_mode != "copy":
-            raise ValueError("Only explicit CPU-copy NV12 is implemented; no zero-copy claim")
+            raise ValueError("Use copy mode with automatic eligible NV12 DMA-BUF import")
         if self.policy not in ("takeover","reject"):
             raise ValueError("policy must be takeover or reject")
         for name in ("device","native","http_socket","frame_socket"):

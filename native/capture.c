@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later
- * Actual V4L2 multi-plane -> CPU NV12 -> MPP H.264 worker.
+ * V4L2 multi-plane -> imported NV12 DMA-BUF or CPU NV12 -> MPP H.264.
  * No EDID writes, no scaler, no fake generated picture fallback.
  * One worker owns one format/encoder epoch. Source change exits cleanly;
  * Python supervisor reopens/query/reallocates and assigns a new epoch.
@@ -40,9 +40,13 @@ struct state {
     struct mapping maps[COUNT];
     struct v4l2_pix_format_mplane fmt;
     MppCtx ctx; MppApi *api; MppEncCfg cfg;
-    MppBufferGroup group; MppBuffer input;
+    MppBufferGroup group; MppBuffer input, imported[COUNT];
+    int dma_fd[COUNT], direct;
+    MppFrameFormat input_format;
     unsigned hs,vs; size_t input_size;
-    uint8_t *au; uint64_t epoch,sequence,captured;
+    uint8_t *au, *converted, *raw[VIDEO_MAX_PLANES]; size_t raw_size[VIDEO_MAX_PLANES];
+    uint64_t epoch,sequence,captured,rate_skipped,error_frames;
+    double signal_fps;
     int matrix709,full_range;
 };
 static void close_state(struct state *s) {
@@ -51,7 +55,11 @@ static void close_state(struct state *s) {
         xioctl(s->fd,VIDIOC_STREAMOFF,&t);
     }
     if(s->ctx) mpp_destroy(s->ctx);
-    if(s->input) mpp_buffer_put(s->input);
+    if(s->input && !s->direct) mpp_buffer_put(s->input);
+    for(unsigned i=0;i<COUNT;i++) {
+        if(s->imported[i]) mpp_buffer_put(s->imported[i]);
+        if(s->dma_fd[i]>=0) close(s->dma_fd[i]);
+    }
     if(s->group) mpp_buffer_group_put(s->group);
     if(s->cfg) mpp_enc_cfg_deinit(s->cfg);
     for(unsigned i=0;i<s->count;i++) for(unsigned p=0;p<s->nplanes;p++)
@@ -59,6 +67,8 @@ static void close_state(struct state *s) {
             munmap(s->maps[i].addr[p],s->maps[i].size[p]);
     if(s->fd>=0) close(s->fd);
     free(s->au);
+    free(s->converted);
+    for(unsigned p=0;p<VIDEO_MAX_PLANES;p++) free(s->raw[p]);
 }
 static int queue(struct state *s,unsigned index) {
     struct v4l2_plane planes[VIDEO_MAX_PLANES]={0};
@@ -81,8 +91,13 @@ static int capture_open(struct state *s,const struct opts *o) {
         fprintf(stderr,"t6: native timing %ux%u interlaced=%u rejected; no scaling or silent fallback\n",
                 t.bt.width,t.bt.height,t.bt.interlaced); errno=ENOTSUP; return -1;
     }
-    /* Apply only currently observed timing; never manufacture or install EDID. */
-    if(xioctl(s->fd,VIDIOC_S_DV_TIMINGS,&t)<0) {
+    /* RK3588 updates its active timing on signal lock. Its SET ioctl matches
+     * exact CEA clocks, but QUERY reports the measured (slightly offset) clock.
+     * Do not redundantly SET a timing the driver already has. */
+    struct v4l2_dv_timings active={0};
+    int timing_current=xioctl(s->fd,VIDIOC_G_DV_TIMINGS,&active)==0 &&
+        memcmp(&active,&t,sizeof(t))==0;
+    if(!timing_current && xioctl(s->fd,VIDIOC_S_DV_TIMINGS,&t)<0) {
         fprintf(stderr,"t6: driver rejected observed DV timing (1440p CEA-list restriction is possible)\n");
         return -1;
     }
@@ -100,10 +115,11 @@ static int capture_open(struct state *s,const struct opts *o) {
        (s->fmt.xfer_func!=V4L2_XFER_FUNC_DEFAULT && s->fmt.xfer_func!=V4L2_XFER_FUNC_709 &&
         s->fmt.xfer_func!=V4L2_XFER_FUNC_SRGB)) { errno=ENOTSUP; return -1; }
     if(enc==V4L2_YCBCR_ENC_DEFAULT) enc=V4L2_MAP_YCBCR_ENC_DEFAULT(c);
-    if(pf!=V4L2_PIX_FMT_BGR24 && enc!=V4L2_YCBCR_ENC_601 && enc!=V4L2_YCBCR_ENC_709) {
+    /* XV709 uses the BT.709 matrix; preserve code values without clamping. */
+    if(pf!=V4L2_PIX_FMT_BGR24 && enc!=V4L2_YCBCR_ENC_601 && enc!=V4L2_YCBCR_ENC_709 && enc!=V4L2_YCBCR_ENC_XV709) {
         fprintf(stderr,"t6: unknown/extended YCbCr matrix rejected\n"); errno=ENOTSUP; return -1;
     }
-    s->matrix709=(pf==V4L2_PIX_FMT_BGR24?s->fmt.height>=720:enc==V4L2_YCBCR_ENC_709);
+    s->matrix709=(pf==V4L2_PIX_FMT_BGR24?s->fmt.height>=720:(enc==V4L2_YCBCR_ENC_709 || enc==V4L2_YCBCR_ENC_XV709));
     if(pf==V4L2_PIX_FMT_BGR24 && quant==V4L2_QUANTIZATION_LIM_RANGE) {
         fprintf(stderr,"t6: limited-range BGR input not implemented\n"); errno=ENOTSUP; return -1;
     }
@@ -111,6 +127,7 @@ static int capture_open(struct state *s,const struct opts *o) {
     unsigned long long totalw=(unsigned long long)t.bt.width+t.bt.hfrontporch+t.bt.hsync+t.bt.hbackporch;
     unsigned long long totalh=(unsigned long long)t.bt.height+t.bt.vfrontporch+t.bt.vsync+t.bt.vbackporch;
     double signal_fps=(totalw&&totalh)?(double)t.bt.pixelclock/(double)(totalw*totalh):0;
+    s->signal_fps=signal_fps;
     char json[1024];
     snprintf(json,sizeof(json),"{\"online\":false,\"message\":\"Configuring native capture\","
              "\"input\":{\"width\":%u,\"height\":%u,\"signal_fps\":%.6f,\"fourcc\":%u,"
@@ -146,7 +163,39 @@ static int capture_open(struct state *s,const struct opts *o) {
 }
 static int encoder_open(struct state *s,const struct opts *o) {
     s->hs=ALIGN64(s->fmt.width); s->vs=ALIGN64(s->fmt.height);
-    s->input_size=(size_t)s->hs*s->vs*3/2;
+    s->input_format=MPP_FMT_YUV420SP;
+    /* Import tightly packed NV12 without touching its pixels. The buffer
+     * stays dequeued until encode_get_packet has completed the frame. */
+    if((s->fmt.pixelformat==V4L2_PIX_FMT_NV12 || s->fmt.pixelformat==V4L2_PIX_FMT_BGR24) && s->nplanes==1 &&
+       s->fmt.width%64==0 && s->fmt.height%16==0 &&
+       s->fmt.plane_fmt[0].bytesperline==s->fmt.width*(s->fmt.pixelformat==V4L2_PIX_FMT_BGR24?3:1) &&
+       s->fmt.plane_fmt[0].sizeimage==(size_t)s->fmt.width*s->fmt.height*3/(s->fmt.pixelformat==V4L2_PIX_FMT_BGR24?1:2)) {
+        s->direct=1;
+        for(unsigned i=0;i<s->count;i++) {
+            struct v4l2_exportbuffer exp={.type=V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE,
+                .index=i,.plane=0,.flags=O_CLOEXEC};
+            if(xioctl(s->fd,VIDIOC_EXPBUF,&exp)<0) {s->direct=0;break;}
+            s->dma_fd[i]=exp.fd;
+            MppBufferInfo info={.type=MPP_BUFFER_TYPE_EXT_DMA,
+                .size=s->maps[i].size[0],.fd=exp.fd};
+            if(mpp_buffer_import(&s->imported[i],&info)!=MPP_OK) {s->direct=0;break;}
+        }
+        if(s->direct) {
+            s->vs=s->fmt.height;
+            s->hs=s->fmt.plane_fmt[0].bytesperline;
+            if(s->fmt.pixelformat==V4L2_PIX_FMT_BGR24) s->input_format=MPP_FMT_BGR888;
+        }
+        else for(unsigned i=0;i<COUNT;i++) {
+            if(s->imported[i]) {mpp_buffer_put(s->imported[i]);s->imported[i]=NULL;}
+            if(s->dma_fd[i]>=0) {close(s->dma_fd[i]);s->dma_fd[i]=-1;}
+        }
+    }
+    fprintf(stderr,"t6: input path %s, stride %ux%u\n",
+            s->direct?"DMABUF import":"CPU copy",s->hs,s->vs);
+    s->input_size=s->direct?s->fmt.plane_fmt[0].sizeimage:(size_t)s->hs*s->vs*3/2;
+    if(t6_write_status(STDOUT_FILENO,s->direct?
+        "{\"input_path\":\"DMABUF import\"}":
+        "{\"input_path\":\"CPU-copy\"}")<0) return -1;
 #define M(call) do { MPP_RET r=(call); if(r!=MPP_OK) { fprintf(stderr,"t6: %s failed: %d\n",#call,r); return -1; } } while(0)
     M(mpp_create(&s->ctx,&s->api));
     M(mpp_init(s->ctx,MPP_CTX_ENC,MPP_VIDEO_CodingAVC));
@@ -155,7 +204,7 @@ static int encoder_open(struct state *s,const struct opts *o) {
 #define C(key,value) M(mpp_enc_cfg_set_s32(s->cfg,key,value))
     C("codec:type",MPP_VIDEO_CodingAVC);
     C("prep:width",s->fmt.width); C("prep:height",s->fmt.height);
-    C("prep:hor_stride",s->hs); C("prep:ver_stride",s->vs); C("prep:format",MPP_FMT_YUV420SP);
+    C("prep:hor_stride",s->hs); C("prep:ver_stride",s->vs); C("prep:format",s->input_format);
     C("prep:range",s->full_range?MPP_FRAME_RANGE_JPEG:MPP_FRAME_RANGE_MPEG);
     /* color is matrix coefficients; primaries/transfer kept consistent with SDR source. */
     C("prep:colorspace",s->matrix709?1:6); C("prep:colorprim",s->matrix709?1:6);
@@ -167,8 +216,9 @@ static int encoder_open(struct state *s,const struct opts *o) {
     C("rc:gop",o->gop); M(mpp_enc_cfg_set_u32(s->cfg,"rc:drop_mode",MPP_ENC_RC_DROP_FRM_DISABLED));
     M(mpp_enc_cfg_set_u32(s->cfg,"rc:max_reenc_times",0)); C("rc:qp_init",-1); C("rc:qp_min",10); C("rc:qp_max",51);
     C("rc:qp_min_i",10); C("rc:qp_max_i",51); C("rc:qp_ip",2);
-    /* Baseline profile rules out B slices; level 5.1 covers target 1440p60 budget. */
-    C("h264:profile",66); C("h264:level",51); C("h264:cabac_en",0);
+    /* Level 5.2 supports 4K60 macroblock rate; keep 5.1 for smaller modes. */
+    C("h264:profile",66); C("h264:level",
+        ((uint64_t)((s->fmt.width+15)/16)*((s->fmt.height+15)/16)*o->fps>983040)?52:51); C("h264:cabac_en",0);
     M(mpp_enc_cfg_set_u32(s->cfg,"split:mode",0));
     M(mpp_enc_cfg_set_u32(s->cfg,"h264:vui_en",1));
     C("base:low_delay",1); C("h264:stream_type",0);
@@ -177,8 +227,11 @@ static int encoder_open(struct state *s,const struct opts *o) {
     M(s->api->control(s->ctx,MPP_ENC_SET_HEADER_MODE,&mode));
     MppPollType timeout=MPP_POLL_BLOCK;
     M(s->api->control(s->ctx,MPP_SET_OUTPUT_TIMEOUT,&timeout));
-    M(mpp_buffer_group_get_internal(&s->group,MPP_BUFFER_TYPE_DRM,0));
+    if(!s->direct) {
+    M(mpp_buffer_group_get_internal(&s->group,MPP_BUFFER_TYPE_DRM|MPP_BUFFER_FLAGS_CACHABLE,0));
     M(mpp_buffer_get(s->group,&s->input,s->input_size));
+    s->converted=malloc(s->input_size); if(!s->converted) return -1;
+    }
     s->au=malloc(T6_MAX_AU); if(!s->au) return -1;
     if(getrandom(&s->epoch,sizeof(s->epoch),0)!=(ssize_t)sizeof(s->epoch)) return -1;
     if(!s->epoch) s->epoch=1;
@@ -187,6 +240,25 @@ static int encoder_open(struct state *s,const struct opts *o) {
 #undef M
 }
 static int convert(struct state *s,unsigned index,const struct v4l2_plane *planes) {
+    /* Native NV12 requires no colorspace conversion or cached staging. */
+    if(s->fmt.pixelformat==V4L2_PIX_FMT_NV12 && s->nplanes==1 &&
+       s->fmt.plane_fmt[0].bytesperline==s->hs) {
+        size_t ybytes=(size_t)s->hs*s->fmt.height;
+        size_t uvbytes=ybytes/2;
+        size_t off=planes[0].data_offset;
+        if(planes[0].bytesused>s->maps[index].size[0] ||
+           off>planes[0].bytesused || ybytes+uvbytes>planes[0].bytesused-off)
+            return -1;
+        if(mpp_buffer_sync_begin(s->input)!=MPP_OK) return -1;
+        uint8_t *dst=mpp_buffer_get_ptr(s->input);
+        const uint8_t *src=(const uint8_t *)s->maps[index].addr[0]+off;
+        memcpy(dst,src,ybytes);
+        memset(dst+ybytes,16,(size_t)s->hs*s->vs-ybytes);
+        memcpy(dst+(size_t)s->hs*s->vs,src+ybytes,uvbytes);
+        memset(dst+(size_t)s->hs*s->vs+uvbytes,128,
+               (size_t)s->hs*(s->vs-s->fmt.height)/2);
+        return mpp_buffer_sync_end(s->input)==MPP_OK?0:-1;
+    }
     struct t6_image im={.width=s->fmt.width,.height=s->fmt.height,.matrix709=s->matrix709};
     switch(s->fmt.pixelformat) {
     case V4L2_PIX_FMT_NV12: im.format=T6_NV12; break;
@@ -198,15 +270,23 @@ static int convert(struct state *s,unsigned index,const struct v4l2_plane *plane
     for(unsigned p=0;p<s->nplanes;p++) {
         if(planes[p].bytesused> s->maps[index].size[p] ||
            planes[p].data_offset>=planes[p].bytesused) return -1;
+        size_t n=planes[p].bytesused;
+        if(s->raw_size[p]<n) {
+            void *buf=realloc(s->raw[p],n); if(!buf) return -1;
+            s->raw[p]=buf; s->raw_size[p]=n;
+        }
+        /* V4L2 MMAP can be uncached device memory. Read it once sequentially;
+         * conversion revisits RGB pixels and needs ordinary cached memory. */
+        memcpy(s->raw[p],s->maps[index].addr[p],n);
     }
-    im.y=(const uint8_t*)s->maps[index].addr[0]+planes[0].data_offset;
+    im.y=s->raw[0]+planes[0].data_offset;
     im.y_size=planes[0].bytesused-planes[0].data_offset;
     im.y_stride=s->fmt.plane_fmt[0].bytesperline;
     if(im.format!=T6_BGR24) {
         size_t ybytes=im.y_stride*im.height;
         unsigned chroma_rows=im.format==T6_NV12?im.height/2:im.height;
         if(s->nplanes==2) {
-            im.uv=(const uint8_t*)s->maps[index].addr[1]+planes[1].data_offset;
+            im.uv=s->raw[1]+planes[1].data_offset;
             im.uv_size=planes[1].bytesused-planes[1].data_offset;
             im.uv_stride=s->fmt.plane_fmt[1].bytesperline;
         } else {
@@ -218,8 +298,10 @@ static int convert(struct state *s,unsigned index,const struct v4l2_plane *plane
             im.uv_stride=im.uv_size/chroma_rows; im.y_size=ybytes;
         }
     }
+    int result=t6_to_nv12(&im,s->converted,s->input_size,s->hs,s->vs);
+    if(result<0) return result;
     if(mpp_buffer_sync_begin(s->input)!=MPP_OK) return -1;
-    int result=t6_to_nv12(&im,mpp_buffer_get_ptr(s->input),s->input_size,s->hs,s->vs);
+    memcpy(mpp_buffer_get_ptr(s->input),s->converted,s->input_size);
     if(mpp_buffer_sync_end(s->input)!=MPP_OK) return -1;
     return result;
 }
@@ -229,7 +311,7 @@ static int encode(struct state *s,uint64_t pts,int force_idr) {
     if(mpp_frame_init(&f)!=MPP_OK) return -1;
     mpp_frame_set_width(f,s->fmt.width); mpp_frame_set_height(f,s->fmt.height);
     mpp_frame_set_hor_stride(f,s->hs); mpp_frame_set_ver_stride(f,s->vs);
-    mpp_frame_set_fmt(f,MPP_FMT_YUV420SP); mpp_frame_set_pts(f,(RK_S64)pts);
+    mpp_frame_set_fmt(f,s->input_format); mpp_frame_set_pts(f,(RK_S64)pts);
     mpp_frame_set_buffer(f,s->input);
     MPP_RET ret=s->api->encode_put_frame(s->ctx,f);
     mpp_frame_deinit(&f);
@@ -255,7 +337,8 @@ static int encode(struct state *s,uint64_t pts,int force_idr) {
                           s->epoch,++s->sequence,pts,s->au,used);
 }
 static int work(struct state *s,const struct opts *o) {
-    uint64_t due=0,last_status=t6_now_us();
+    uint64_t last_status=t6_now_us();
+    double credit=0;
     int force_idr=1;
     while(!stopping) {
         struct pollfd pollers[2]={{s->fd,POLLIN|POLLPRI,0},{STDIN_FILENO,POLLIN,0}};
@@ -280,16 +363,33 @@ static int work(struct state *s,const struct opts *o) {
         s->captured++;
         uint64_t now=t6_now_us();
         /* Only raw, NOT already encoded, frames can be skipped for rate limiting. */
-        if((b.flags&V4L2_BUF_FLAG_ERROR) || now+1000<due) {
+        if(b.flags&V4L2_BUF_FLAG_ERROR) {
+            s->error_frames++;
             if(queue(s,b.index)<0) return -1;
             continue;
         }
-        if(convert(s,b.index,planes)<0) { fprintf(stderr,"t6: invalid/unsupported plane layout\n"); return -1; }
-        /* Copy completes before return to driver; MPP owns a separate DRM buffer. */
-        if(queue(s,b.index)<0) return -1;
-        if(encode(s,now,force_idr)<0) return -1;
+        /* Cap by signal cadence rather than dequeue scheduling jitter. */
+        if(s->signal_fps>o->fps+0.1) {
+            credit+=o->fps;
+            if(credit<s->signal_fps) {
+                s->rate_skipped++;
+                if(queue(s,b.index)<0) return -1;
+                continue;
+            }
+            credit-=s->signal_fps;
+        }
+        if(s->direct) {
+            if(planes[0].data_offset || planes[0].bytesused<s->input_size) return -1;
+            s->input=s->imported[b.index];
+            if(encode(s,now,force_idr)<0) return -1;
+            if(queue(s,b.index)<0) return -1;
+        } else {
+            if(convert(s,b.index,planes)<0) return -1;
+            if(queue(s,b.index)<0) return -1;
+            if(encode(s,now,force_idr)<0) return -1;
+        }
         force_idr=0;
-        due=now+1000000/o->fps;
+
         if(now-last_status>=1000000) {
             char json[256];
             snprintf(json,sizeof(json),"{\"online\":true,\"capture_frames\":%llu,\"encoded_frames\":%llu,\"copy\":true}",
@@ -335,10 +435,11 @@ int main(int argc,char **argv) {
         else { fprintf(stderr,"Unknown option: %s\n",k); return 2; }
     }
     if(!o.fps||o.fps>60||o.bitrate<100000||o.bitrate>35000000||!o.gop||o.gop>120||
-       o.mw<64||o.mw>2560||o.mh<64||o.mh>1440||o.mw%2||o.mh%2||
+       o.mw<64||o.mw>3840||o.mh<64||o.mh>2160||o.mw%2||o.mh%2||
        (!!o.ew!=!!o.eh)||o.ew>o.mw||o.eh>o.mh||o.ew%2||o.eh%2) return 2;
     signal(SIGTERM,on_signal); signal(SIGINT,on_signal); signal(SIGPIPE,SIG_IGN);
     struct state s={.fd=-1};
+    for(unsigned i=0;i<COUNT;i++) s.dma_fd[i]=-1;
     int r=capture_open(&s,&o);
     if(r==0) r=encoder_open(&s,&o);
     if(r==0) r=work(&s,&o);

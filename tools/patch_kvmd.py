@@ -120,25 +120,22 @@ def transform_server(s):
         async def _on_set_encodings(self) -> None:
             assert self.__stage1_authorized.is_passed()
             assert self.__kvmd_session
-            if not self._encodings.has_h264:
-                raise RfbError("T6 requires negotiated H264 support in the actual TigerVNC build; "
-                               "JPEG live video is not implemented")
-            if not self._encodings.has_tight:
-                raise RfbError("T6 requires Tight support for offline diagnostic screens")
-            selected = (self._encodings.tight_jpeg_quality, self.__desired_fps, True)
+            if not self._encodings.has_tight or self._encodings.tight_jpeg_quality <= 0:
+                raise RfbError("T6 requires Tight/JPEG support for compatibility and status screens")
+            selected = (self._encodings.tight_jpeg_quality, self.__desired_fps, self._encodings.has_h264)
             if selected != self.__t6_applied_encodings:
                 has_quality = (await self.__kvmd_session.streamer.get_state())["features"]["quality"]
                 quality = self._encodings.tight_jpeg_quality if has_quality else None
                 await self.__kvmd_session.streamer.set_params(quality, self.__desired_fps)
                 self.__t6_applied_encodings = selected
-                get_logger(0).info("%s [T6]: negotiated H264=True, fps cap=%d", self._remote, self.__desired_fps)
+                get_logger(0).info("%s [T6]: negotiated H264=%s, fps cap=%d", self._remote, self._encodings.has_h264, self.__desired_fps)
             self.__stage2_encodings_accepted.set_passed(multi=True)
     ''')
     ast.parse(s)
     return s
 
 def transform_init(s):
-    s=one(s,"from .server import VncServer","from .server import VncServer\nfrom t6_kvm.kvmd_adapter import T6StreamerClient")
+    s=one(s,"from .server import VncServer","from .server import VncServer\nfrom t6_kvm.kvmd_adapter import T6StreamerClient, T6JpegStreamerClient")
     # Exact AST assignment, not a greedy cross-file regex.
     tree=ast.parse(s)
     matches=[]
@@ -149,7 +146,7 @@ def transform_init(s):
     if len(matches)!=1:
         raise ValueError("Could not identify streamers assignment")
     node=matches[0]; lines=s.splitlines(keepends=True)
-    lines[node.lineno-1:node.end_lineno]=["    streamers = [T6StreamerClient()]\n"]
+    lines[node.lineno-1:node.end_lineno]=["    streamers = [T6StreamerClient(), T6JpegStreamerClient()]\n"]
     return "".join(lines)
 
 def transform_streamer(s):
@@ -178,20 +175,58 @@ def transform_kvmd(s):
 
 
 def transform_rfb(s):
+    s=one(s, 'self.__symmap: dict[int, dict[int, int]] = {}',
+          'self.__symmap: (dict[int, dict[int, int]] | None) = None')
     # Restrict the existing VeNCrypt negotiation; no new RFB implementation.
     anchor='        await self._write_struct("VeNCrypt auth types list", "B" + "L" * len(auth_types), len(auth_types), *auth_types)'
-    s=one(s, anchor, '        if 262 not in auth_types:\n'
-          '            raise RfbError("T6 requires certificate-backed X509Plain authentication")\n'
-          '        auth_types = {262: auth_types[262]}  # No plaintext/anonymous TLS downgrade\n'+anchor)
+    s=one(s, anchor, '        selected_auth = 262 if self.__x509_cert_path else 256\n'
+          '        if selected_auth not in auth_types:\n'
+          '            raise RfbError("T6 configured authentication is unavailable")\n'
+          '        compatible_vnc = auth_types.get(2)\n'
+          '        auth_types = {selected_auth: auth_types[selected_auth]}\n'
+          '        if selected_auth == 256 and compatible_vnc:\n'
+          '            auth_types[2] = compatible_vnc\n'+anchor)
     anchor='        user = (await self._read_text("VeNCrypt user", user_length)).strip()'
     return one(s, anchor, '        if not 0 < user_length <= 256 or not 0 < passwd_length <= 4096:\n'
                '            raise RfbError("T6: credential length exceeds bounded handshake limits")\n'+anchor)
+
+def transform_rfb_encodings(s):
+    s=one(s, 'import dataclasses', 'import dataclasses'+chr(10)+'from t6_kvm.vnc_transport import continuous_updates_enabled')
+    return one(s, 'metadata=_make_meta(RfbEncodings.CONT_UPDATES)',
+               'metadata=_make_meta(RfbEncodings.CONT_UPDATES if continuous_updates_enabled() else frozenset())')
+
+def transform_rfb_stream(s):
+    s=one(s, "import struct", "import struct"+chr(10)+"from t6_kvm.vnc_transport import configure as t6_configure, drain as t6_drain")
+    s=one(s, "        self.__writer = writer", "        self.__writer = writer"+chr(10)+"        t6_configure(writer)")
+    anchor="                await self.__writer.drain()"
+    if s.count(anchor) != 2:
+        raise ValueError("Expected two RFB drain sites")
+    return s.replace(anchor, "                await t6_drain(self.__writer)")
+
+def transform_health(s):
+    # /bin/false explicitly denotes unsupported Raspberry Pi telemetry.
+    # Return unknown rather than inventing healthy throttling flags.
+    anchor='        cmd = [*self.__vcgencmd_cmd, arg]'
+    return one(s, anchor, '        if self.__vcgencmd_cmd == ["/bin/false"]:\n'
+               '            return None\n'+anchor)
+
+def transform_aiotools(s):
+    # Python 3.13 detaches SSLProtocol synchronously on abort. Cache the
+    # SSL object before closing so takeover cleanup can finish reliably.
+    s=one(s, '        writer.transport.abort()  # type: ignore',
+          '        ssl_obj = writer.get_extra_info("ssl_object")\n'
+          '        writer.transport.abort()  # type: ignore')
+    return one(s, '            ssl_obj = writer.get_extra_info("ssl_object")\n', '')
 
 TRANSFORMS={"kvmd/apps/vnc/server.py":transform_server,
             "kvmd/apps/vnc/__init__.py":transform_init,
             "kvmd/clients/streamer.py":transform_streamer,
             "kvmd/apps/kvmd/server.py":transform_kvmd,
-            "kvmd/apps/vnc/rfb/__init__.py":transform_rfb}
+            "kvmd/apps/vnc/rfb/__init__.py":transform_rfb,
+            "kvmd/apps/vnc/rfb/stream.py":transform_rfb_stream,
+            "kvmd/apps/vnc/rfb/encodings.py":transform_rfb_encodings,
+            "kvmd/apps/kvmd/info/health.py":transform_health,
+            "kvmd/aiotools.py":transform_aiotools}
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)

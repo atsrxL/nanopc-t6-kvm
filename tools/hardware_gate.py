@@ -19,7 +19,8 @@ def main():
         raise SystemExit('Explicit hardware review must match current release; never copy an old approval blindly')
     owner=validate_owner()
     if owner.get('phase')!='ready' or owner.get('udc')!=UDC: raise SystemExit('Own gadget is not ready')
-    for name in (cfg.device,'/dev/mpp_service','/dev/hidg0','/dev/hidg1'):
+    for name in (cfg.device,'/dev/mpp_service','/dev/dma_heap/system-uncached',
+                 '/dev/dri/renderD128','/dev/hidg0','/dev/hidg1'):
         p=Path(name);s=p.stat()
         if not stat.S_ISCHR(s.st_mode) or not os.access(p,os.R_OK|os.W_OK):
             raise SystemExit(f'Service account has no approved read/write access to {p}')
