@@ -1,0 +1,30 @@
+[Unit]
+Description=T6 KVM isolated TigerVNC endpoint
+Requires=t6-kvmd.service
+After=t6-kvmd.service
+ConditionPathExists=/etc/t6-kvm/vnc.crt
+ConditionPathExists=/etc/t6-kvm/vnc.key
+
+[Service]
+Type=simple
+User=t6-kvm
+Group=t6-kvm
+UMask=0027
+Environment=T6_KVM_CONFIG=/etc/t6-kvm/streamer.toml
+ExecStart=/opt/t6-kvm/current/bin/t6-kvmd-vnc --run
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=15
+KillMode=control-group
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=/run/t6-kvm
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,11 @@
+-- The C compiler identification is GNU 14.2.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+CMake Error at CMakeLists.txt:20 (find_path):
+  Could not find MPP_INCLUDE_DIR using the following files: rk_mpi.h
+
+
+-- Configuring incomplete, errors occurred!

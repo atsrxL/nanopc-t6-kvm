@@ -1,0 +1,34 @@
+[Unit]
+Description=T6 KVM isolated kvmd control and video lifecycle
+After=network.target
+ConditionPathExists=/etc/t6-kvm/htpasswd
+ConditionPathExists=/var/lib/t6-kvm/hardware-reviewed.json
+ConditionPathExists=/run/t6-kvm-otg/owner.json
+
+[Service]
+Type=simple
+User=t6-kvm
+Group=t6-kvm
+RuntimeDirectory=t6-kvm
+RuntimeDirectoryMode=0750
+UMask=0027
+Environment=T6_KVM_CONFIG=/etc/t6-kvm/streamer.toml
+ExecStartPre=/opt/t6-kvm/current/venv/bin/python /opt/t6-kvm/current/tools/hardware_gate.py
+ExecStart=/opt/t6-kvm/current/bin/t6-kvmd --run
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=15
+KillMode=control-group
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX
+ReadWritePaths=/run/t6-kvm
+# No PrivateDevices: the approved V4L2/MPP/DRM/HID nodes must remain visible.
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "project": "t6-kvm",
+  "project_version": "0.1.0",
+  "python": ">=3.13,<3.14",
+  "review_date": "2026-09-23",
+  "dependencies": [
+    {
+      "name": "kvmd",
+      "repository": "https://github.com/pikvm/kvmd.git",
+      "version": "v4.120",
+      "commit": "78ff181e95b14327831441d58f2f7f4cb2181cde",
+      "license": "GPL-3.0-or-later",
+      "usage": "runtime, guarded patch"
+    },
+    {
+      "name": "ustreamer",
+      "repository": "https://github.com/pikvm/ustreamer.git",
+      "version": "v6.41",
+      "commit": "05a5d3fed418503c49aa42916874c8a9a845c04b",
+      "license": "GPL-3.0-or-later",
+      "usage": "interface reference only; not linked or imported at runtime"
+    },
+    {
+      "name": "mpp",
+      "repository": "https://github.com/rockchip-linux/mpp.git",
+      "version": "commit 2026-08-25",
+      "commit": "0986d01294d5c2449c14cf13af9b740368c33967",
+      "license": "Apache-2.0; inspect per-file SPDX including Apache-2.0 OR MIT",
+      "usage": "runtime native hardware encoder"
+    },
+    {
+      "name": "librga",
+      "repository": "https://github.com/airockchip/librga.git",
+      "version": "1.10.6_[3]",
+      "commit": "2b32edcb97b601b25683e2941d888c8515da6d55",
+      "license": "Apache-2.0; retain upstream COPYING and per-file notices",
+      "usage": "optional reference only; scaler NOT implemented; repository includes vendor binaries"
+    }
+  ],
+  "limits": [
+    "Pins are not a claim of successful target builds.",
+    "Debian/Python transitive packages are not fully hash-locked; record dpkg-query and pip freeze at first successful build.",
+    "Never execute upstream OS provisioning, bootconfig, networking, or kernel installation scripts."
+  ]
+}

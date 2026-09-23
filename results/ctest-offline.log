@@ -1,0 +1,8 @@
+Internal ctest changing into directory: /mnt/data/t6-kvm-0.1.0/build-offline
+Test project /mnt/data/t6-kvm-0.1.0/build-offline
+    Start 1: native-core
+1/1 Test #1: native-core ......................   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.01 sec

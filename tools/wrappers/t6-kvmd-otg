@@ -1,0 +1,9 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-3.0-or-later
+set -eu
+base=$(CDPATH= cd -- "$(dirname -- "$(readlink -f -- "$0")")/.." && pwd)
+exec "$base/venv/bin/python" -c 'from kvmd.apps.otg import main; main()' \
+ --main-config /etc/t6-kvm/main.yaml \
+ --legacy-auth-config /etc/t6-kvm/legacy-auth.yaml \
+ --override-dir /etc/t6-kvm/override.d \
+ --override-config /etc/t6-kvm/override.yaml "$@"

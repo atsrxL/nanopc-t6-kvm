@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "t6-kvm"
+version = "0.1.0"
+description = "Ordered RK3588 video bridge for a dedicated kvmd-vnc instance"
+requires-python = ">=3.13,<3.14"
+dependencies = ["aiohttp>=3.11,<4"]
+license = {file = "LICENSE"}
+
+[project.scripts]
+t6-streamer = "t6_kvm.daemon:main"
+t6-preflight = "t6_kvm.preflight:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

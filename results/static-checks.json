@@ -1,0 +1,121 @@
+{
+  "commands": [
+    {
+      "command": [
+        "/opt/pyvenv/bin/python",
+        "-m",
+        "compileall",
+        "-q",
+        "src",
+        "tools",
+        "tests"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "bash",
+        "-n",
+        "tools/build_target.sh"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "sh",
+        "-n",
+        "tools/wrappers/t6-kvmd"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "sh",
+        "-n",
+        "tools/wrappers/t6-kvmd-htpasswd"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "sh",
+        "-n",
+        "tools/wrappers/t6-kvmd-otg"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "sh",
+        "-n",
+        "tools/wrappers/t6-kvmd-vnc"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "yaml_parse": "config/main.yaml",
+      "status": "PASS",
+      "kvmd_schema_validation": "NOT_TESTED"
+    },
+    {
+      "yaml_parse": "config/meta.yaml",
+      "status": "PASS",
+      "kvmd_schema_validation": "NOT_TESTED"
+    },
+    {
+      "yaml_parse": "config/override.yaml",
+      "status": "PASS",
+      "kvmd_schema_validation": "NOT_TESTED"
+    }
+  ],
+  "validated_toml": {
+    "config/streamer-native1440-experimental.toml": {
+      "device": "/dev/video0",
+      "native": "/opt/t6-kvm/current/bin/t6-capture",
+      "http_socket": "/run/t6-kvm/streamer.sock",
+      "frame_socket": "/run/t6-kvm/frames.sock",
+      "fps": 60,
+      "bitrate_kbps": 20000,
+      "gop": 60,
+      "max_width": 2560,
+      "max_height": 1440,
+      "expected_width": 2560,
+      "expected_height": 1440,
+      "queue_frames": 3,
+      "stall_seconds": 8.0,
+      "policy": "takeover",
+      "input_mode": "native",
+      "copy_mode": "copy"
+    },
+    "config/streamer.toml": {
+      "device": "/dev/video0",
+      "native": "/opt/t6-kvm/current/bin/t6-capture",
+      "http_socket": "/run/t6-kvm/streamer.sock",
+      "frame_socket": "/run/t6-kvm/frames.sock",
+      "fps": 60,
+      "bitrate_kbps": 20000,
+      "gop": 60,
+      "max_width": 1920,
+      "max_height": 1080,
+      "expected_width": 0,
+      "expected_height": 0,
+      "queue_frames": 3,
+      "stall_seconds": 8.0,
+      "policy": "takeover",
+      "input_mode": "native",
+      "copy_mode": "copy"
+    }
+  }
+}

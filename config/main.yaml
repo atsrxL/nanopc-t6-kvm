@@ -1,0 +1,114 @@
+# Dedicated configuration: do not merge into /etc/kvmd.
+kvmd:
+  server:
+    unix: /run/t6-kvm/kvmd.sock
+    unix_rm: true
+    unix_mode: 432 # decimal 0660, unambiguous to YAML parsers
+  auth:
+    enabled: true
+    usc:
+      users: []
+      groups: []
+      kvmd_users: [t6-kvm]
+      kvmd_groups: []
+    internal:
+      type: htpasswd
+      file: /etc/t6-kvm/htpasswd
+    totp:
+      secret: {file: ""}
+  info:
+    meta: /etc/t6-kvm/meta.yaml
+    extras: /opt/t6-kvm/current/share/extras
+    hw:
+      platform: /etc/t6-kvm/platform
+      vcgencmd_cmd: [/bin/false] # Unsupported RPi telemetry; never fake voltage readings
+  log_reader: {enabled: false}
+  hid:
+    type: otg
+    keymap: /opt/t6-kvm/current/share/keymaps/en-us
+    keyboard:
+      device: /dev/hidg0
+    mouse:
+      device: /dev/hidg1
+      absolute: true
+      horizontal_wheel: true
+    mouse_alt: {device: ""}
+  atx: {type: disabled}
+  msd: {type: disabled}
+  streamer:
+    forever: false
+    shutdown_delay: 10
+    quality: 0
+    resolution: {default: "", available: []}
+    desired_fps: {default: 60, min: 1, max: 60}
+    h264_bitrate: {default: 20000, min: 100, max: 20000}
+    h264_gop: {default: 60, min: 1, max: 60}
+    unix: /run/t6-kvm/streamer.sock
+    process_name_prefix: t6-kvm/streamer
+    cmd:
+      - /opt/t6-kvm/current/venv/bin/python
+      - -m
+      - t6_kvm.daemon
+      - --config
+      - /etc/t6-kvm/streamer.toml
+      - --unix
+      - "{unix}"
+      - --desired-fps
+      - "{desired_fps}"
+      - --h264-bitrate
+      - "{h264_bitrate}"
+      - --h264-gop
+      - "{h264_gop}"
+  snapshot:
+    idle_interval: 0
+    live_interval: 0
+    wakeup_key: ""
+    wakeup_move: 0
+  gpio: {drivers: {}, scheme: {}}
+  switch:
+    device: /dev/t6-kvm-no-switch
+    default_edid: /etc/t6-kvm/unused-switch-edid.hex
+pst:
+  server: {unix: /run/t6-kvm/no-pst.sock}
+otg:
+  gadget: t6-kvm
+  udc: fc000000.usb
+  user: root # Root retains configfs ownership; service only accesses HID character devices
+  meta: /run/t6-kvm-otg/meta
+  manufacturer: T6 KVM experimental
+  product: T6 keyboard and absolute mouse
+  config: T6 HID only
+  serial: T6KVM001
+  remote_wakeup: false
+  devices:
+    hid:
+      keyboard: {start: true}
+      mouse: {start: true}
+      mouse_alt: {start: false}
+    msd: {start: false}
+    serial: {enabled: false}
+    ethernet: {enabled: false}
+    audio: {enabled: false}
+    drives: {enabled: false}
+vnc:
+  desired_fps: 60
+  mouse_output: usb
+  keymap: /opt/t6-kvm/current/share/keymaps/en-us
+  server:
+    host: 127.0.0.1 # Change explicitly only after certificate/client validation; no firewall edits
+    port: 5900
+    max_clients: 10 # upstream listen backlog, NOT the active-controller limit
+    no_delay: true
+    tls:
+      ciphers: ECDHE+AESGCM:ECDHE+CHACHA20
+      x509:
+        cert: /etc/t6-kvm/vnc.crt
+        key: /etc/t6-kvm/vnc.key
+  auth:
+    vncauth: {enabled: false}
+    vencrypt: {enabled: true}
+  kvmd: {unix: /run/t6-kvm/kvmd.sock}
+  streamer: {unix: /run/t6-kvm/streamer.sock}
+  memsink:
+    jpeg: {sink: ""}
+    h264: {sink: ""}

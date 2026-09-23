@@ -1,0 +1,6 @@
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /mnt/data/t6-kvm-0.1.0/build-offline
+[ 42%] Built target t6-core
+[ 71%] Built target t6-probe
+[100%] Built target t6-native-test
