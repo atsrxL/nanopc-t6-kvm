@@ -1,0 +1,7 @@
+build*/
+deps/
+stage*/
+__pycache__/
+*.pyc
+*.egg-info/
+.venv*/
