@@ -1,3 +1,49 @@
+## 2026-09-24 — repository publication checks
+
+Published the pending JPEG tiling/collector and H264 recovery changes with their historical evidence. Updated offline patch fixtures to include the newly required upstream methods and read-frame anchor; production anchors remain strict. VM301 Debian Python3.13: 63 tests run, 62 passed, one skipped (native C wire target not built in this Python-only check). Generated the complete overlay against clean pinned kvmd 78ff181e successfully; all transformed Python files compile. No new hardware test or service deployment was performed for this publication.
+
+The four TigerVNC logs retain connection/decoder evidence; key press/release event details were removed from the fullscreen log before publication. Full test and generated patch evidence retained on VM301 at /root/rkmoon-artifacts/20260924-vnc-publish. Windows high-resolution H264 visual acceptance remains pending as described below.
+
+## 2026-09-23 17:28 — Mac1440p Tight compatibility fix
+
+Mac TigerVNC1.16.2 reproduced failure: TightDecoder: Too large rectangle (2560 pixels). Original JPEG sender emitted a single full-width rectangle, exceeding Tight maximum width2048. Added JPEG tiling into <=2048x2048 rectangles with a single framebuffer update header, proper tile coordinates and per-tile compact lengths. Adapter encodes tiles directly, avoiding JPEG decode/reencode for normal live frames; byte JPEG status frames split as fallback.
+
+Deployed adapter and RFB sender; backups /root/agent.backup/t6-jpeg-tiles. Post-fix Mac resized to2560x1440 and enabled continuous updates, acknowledged54MB over ~32seconds without stream errors. Before/after client logs saved here. Closed test viewer for decode statistics; controlled PC stays1440p59.95, continuous setting and10Mbps preserved. This fixes confirmed JPEG width incompatibility, not proof that Windows H264 issue is resolved.
+
+## 2026-09-23 — request-paced H264 recovery latency
+
+Controlled real-RFB test inserted33ms processing pause after each decoded picture, retaining request-paced mode. Before changing recovery throttle:121/121 decoded frames in20.05s, mean response wait115.3ms, max415.6ms. After reducing both adapter and broker key-request throttle from250ms to30ms:331/331 decoded in20.01s, mean10.44ms, max47.48ms. Geometry1920x1080. Client decode work is included in total duration; no claim of30fps displayed on Windows.
+
+Both source and final queues continue to require IDR after loss. Shorter throttle prevents small queue overflow from introducing quarter-second recovery pauses; may increase IDR frequency/bitrate demand for slow viewers. Request-paced mode and bounded queues unchanged. Live files backed up under /root/agent.backup/t6-key-recovery. Windows visual acceptance remains pending.
+
+## 2026-09-23 17:10 — actual local TigerVNC comparison
+
+Ran installed macOS TigerVNC 1.16.2, authenticated to T6, first windowed 1100x720 then fullscreen. This binary does NOT advertise H264 encoding50 and selected Tight/JPEG. Windowed client final decode statistics: ~1960 rectangles, 4.06426 Gpixels, 144.852 MiB over ~146 seconds (~13.4 fps). Passive observation: windowed 155 requests/12.00 seconds, max request gap0.167s; fullscreen194 requests/15.00 seconds, max gap0.222s. No material mode difference reproduced on this local JPEG path. Logs saved alongside this report.
+
+macOS screen capture omitted TigerVNC window content (window sharing state0); screenshots do not establish visual correctness. Decode statistics and sampling show actual Tight decode/render activity. Cannot use this Mac binary to reproduce Windows H264 black screen. Closed only agent-launched viewers and removed temporary password file after measurements. Controlled PC remains1080p60 animation. No server settings changed in this test.
+
+## 2026-09-23 17:02 — 1080p TigerVNC stutter investigation
+
+Actual Windows session advertised H264 and selected the H264 streamer. Passive incoming TCP observation over 15 seconds counted 87 framebuffer update requests (~5.8/s); send queue sampled empty. Capture/encode remained ~60fps. JPEG collector is not on this path.
+
+Corrected coupling between source gate and final VNC recovery: streamer loop previously called read_frame(not fb_has_key), repeatedly resetting the upstream gate while final output waited for recovery. It now reads with False; independent source/output gates continue to enforce IDR recovery, and key requests remain explicit. Applied live server.py and persisted in tools/patch_kvmd.py. Backup /root/agent.backup/t6-source-gate/server.py. Request-paced mode retained. Viewer disconnected on restart; no post-fix Windows visual acceptance yet. This is not a confirmed complete fix for all stutter.
+
+## 2026-09-23 — 4K JPEG periodic blanking fix
+
+JPEG conversion previously awaited decode/RGB/JPEG before reading the next AU. Under 4K load this backpressured the internal socket, whose daemon drain timeout is 2 seconds. Logs showed repeated AU disconnects followed by VNC Waiting for stream/recovery every ~4–6 seconds.
+
+Added an independent receive task and an 8-AU bounded recovery queue to the JPEG adapter. Overflow discards the GOP and requests a fresh IDR, keeping reads active and latency bounded. Collector is cancelled and joined when reading closes. No timeout extension or VNC slow-client disconnection added.
+
+Live independent 4K conversion: 125 valid JPEGs over 35.01 seconds, maximum output gap 0.559 seconds, no stream failure. 41 core/transport tests: 40 passed, 1 skipped. Full RFB test was interrupted by authenticated takeover from the user's bVNC; it is not counted as a completed test. Actual bVNC session from 16:50:36 subsequently remained connected and acknowledged video without stream recovery logs. JPEG remains software-limited, not 4K60. Deployed adapter with original backed up under /root/agent.backup/t6-jpeg-drain/.
+
+## 2026-09-23 16:35 — 1440p investigation
+
+User clarified: bVNC tears; Windows TigerVNC shows black video. EOF alone does not establish either root cause.
+
+Original DRM animation modified active scanout without synchronization. Replaced with double buffering and page-flip completion events. Live service t6-1440-animation-vsync reports 600 flips per ~10 seconds; visual acceptance pending. Script tools/diagnostics/drm_1440_animation.py is specific to MS-A2 card2/connector378/crtc364 and restores old mode on SIGTERM.
+
+Actual RFB H264 extraction and PyAV decode passed 1183/1183 frames in 20.00s before fix, 1184/1184 in 20.01s after. All 2560x1440, first AU starts SPS/PPS, baseline level5.1. This does not validate Windows Media Foundation decoding. Windows black-screen root cause remains unconfirmed; client version/logs needed. No KVM server config changes.
+
 ## EDID deployment and source readback
 
 Added 2560x1440@59.9506 and 2560x1600@59.9716 DTDs within existing two-block EDID, retained 1080p preferred timing and CTA 4K video codes. Both checksums valid; T6 ioctl write/readback exact. PC EDID readback independently decoded both new timings. PC normal DRM modes list still omits them (driver filtering remains unresolved). 1080p stream recovered at 59.99fps. Boot helper persists EDID from /etc/t6-kvm/edid.bin before starting capture. Backup /root/agent.backup/t6-edid-20260923-161502. No source reboot or boot override.

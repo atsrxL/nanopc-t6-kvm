@@ -1,0 +1,44 @@
+
+TigerVNC v1.16.2
+Built on: 2026-03-26 11:30
+Copyright (C) 1999-2026 TigerVNC team and many others (see README.rst)
+See https://www.tigervnc.org for information on TigerVNC.
+
+Wed Sep 23 17:28:22 2026
+ Config:      Set ReconnectOnError(Bool) to off
+ Config:      Set AlertOnFatalError(Bool) to off
+ Config:      Set RemoteResize(Bool) to off
+ Config:      Set SendClipboard(Bool) to off
+ Config:      Set AcceptClipboard(Bool) to off
+ Config:      Set geometry(String) to 1280x800
+ DecodeManager: Detected 10 CPU core(s)
+ DecodeManager: Creating 4 decoder thread(s)
+ TcpSocket:   Connecting to 192.168.123.99 [192.168.123.99] port 5900
+ CConn:       Connected to host 192.168.123.99 port 5900
+ CConnection: Reading protocol version
+ CConnection: Server supports RFB protocol version 3.8
+ CConnection: Using RFB protocol version 3.8
+ CConnection: Processing security types message
+ CConnection: Processing security types message
+ CConnection: Server offers security type VeNCrypt(19)
+ CConnection: Server offers security type VncAuth(2)
+ CConnection: Choosing security type VncAuth(2)
+ CConnection: Processing security message
+ CConnection: Processing security message
+ CConnection: Processing security result message
+ CConnection: Processing security result message
+ CConnection: Authentication success!
+ CConnection: Reading server initialisation
+ CConnection: Reading server initialisation
+ CConnection: Initialisation done
+ CConnection: Enabling continuous updates
+ Viewport:    Got server LED state: 0x00000000
+
+Wed Sep 23 17:28:23 2026
+ Viewport:    Resizing framebuffer from 800x600 to 2560x1440
+
+Wed Sep 23 17:28:55 2026
+ DecodeManager:     Tight: 882 rects, 1.6257 Gpixels
+ DecodeManager:            52.3696 MiB (1:118.419 ratio)
+ DecodeManager:   Total: 882 rects, 1.6257 Gpixels
+ DecodeManager:          52.3696 MiB (1:118.419 ratio)

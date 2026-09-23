@@ -34,6 +34,8 @@ class _Client:
     async def _authorize_none(self): pass
     async def __queue_frame(self,frame): pass
     async def __fb_sender_task_loop(self): pass
+    async def __streamer_task_loop(self):
+        frame = await read_frame(not self.__fb_has_key)
     async def _on_set_encodings(self): pass
 '''
 
@@ -99,6 +101,7 @@ class PatchTests(unittest.IsolatedAsyncioTestCase):
         c,_=transformed_client();self.assertFalse(await c._authorize_none())
     def test_tls_patch_fail_closed(self):
         text='''class RfbClient:
+    async def _send_fb_jpeg(self, data): pass
     def __init__(self):
         self.__symmap: dict[int, dict[int, int]] = {}
     async def auth(self):

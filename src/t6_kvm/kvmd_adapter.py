@@ -43,7 +43,7 @@ class T6StreamerClient(BaseStreamerClient):
         return H264
 
     def request_key(self):
-        if self.writer and time.monotonic()-self.last_request > .25:
+        if self.writer and time.monotonic()-self.last_request > .03:
             self.writer.write(b"K")
             self.last_request = time.monotonic()
 
@@ -124,16 +124,39 @@ class T6JpegStreamerClient(BaseStreamerClient):
             if not pictures or not emit:
                 return None
             picture = pictures[-1]
-            output = io.BytesIO()
-            picture.to_image().save(output, format="JPEG", quality=70)
+            image = picture.to_image()
+            tiles = []
+            for y in range(0, image.height, 2048):
+                for x in range(0, image.width, 2048):
+                    part = image.crop((x, y, min(x+2048,image.width), min(y+2048,image.height)))
+                    output = io.BytesIO()
+                    part.save(output, format="JPEG", quality=70)
+                    tiles.append((x,y,part.width,part.height,output.getvalue()))
             return {"online": True, "width": picture.width, "height": picture.height,
-                    "format": StreamerFormats.JPEG, "data": output.getvalue()}
+                    "format": StreamerFormats.JPEG, "data": tiles}
 
         async with self.source.reading() as read:
+            # Keep draining the AU socket while expensive 4K conversion runs.
+            # Overflow drops a GOP and requests an IDR, bounding latency.
+            pending = FrameBuffer(8, self.source.request_key)
+
+            async def collect():
+                try:
+                    while True:
+                        pending.put(Frame.from_kvmd(await read(False)))
+                except Exception as ex:
+                    pending.reset()
+                    pending.queue.put_nowait(ex)
+
+            collector = asyncio.create_task(collect())
+
             async def receive(_key_required):
                 nonlocal last_jpeg, decoder, epoch
                 while True:
-                    frame = await read(False)
+                    item = await pending.get()
+                    if isinstance(item, Exception):
+                        raise item
+                    frame = item.kvmd()
                     if epoch != frame["t6_epoch"] or frame.get("key"):
                         # Every key AU includes SPS/PPS, also recovering queue loss.
                         decoder = av.CodecContext.create("h264", "r")
@@ -149,4 +172,8 @@ class T6JpegStreamerClient(BaseStreamerClient):
                     if result is not None:
                         last_jpeg = now
                         return result
-            yield receive
+            try:
+                yield receive
+            finally:
+                collector.cancel()
+                await asyncio.gather(collector, return_exceptions=True)

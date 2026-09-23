@@ -87,7 +87,7 @@ class Broker:
 
     def request_key(self):
         now = time.monotonic()
-        if self.proc and self.proc.returncode is None and now-self.key_time >= .25:
+        if self.proc and self.proc.returncode is None and now-self.key_time >= .03:
             try:
                 self.proc.stdin.write(b"K")
                 self.key_time = now

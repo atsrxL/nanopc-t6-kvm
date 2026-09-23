@@ -35,6 +35,10 @@ def method(s,cls,name,new):
     return "".join(lines)
 
 def transform_server(s):
+    # Source and output queues have independent recovery gates. A viewer
+    # waiting for an IDR must not reset the source gate on every AU read.
+    s=one(s, 'frame = await read_frame(not self.__fb_has_key)',
+          'frame = await read_frame(False)')
     s=one(s,"from .render import make_text_jpeg", "from .render import make_text_jpeg\n"
           "from t6_kvm.kvmd_adapter import (VncFrameBuffer, begin_client, claim_client, finish_client)\n"
           "from t6_kvm.protocol import Frame as T6Frame, RecoveryGate as T6Gate")
@@ -175,6 +179,45 @@ def transform_kvmd(s):
 
 
 def transform_rfb(s):
+    s=method(s,"RfbClient","_send_fb_jpeg",'''
+        async def _send_fb_jpeg(self, data) -> None:
+            assert self._encodings.has_tight
+            if isinstance(data, bytes):
+                if self._width > 2048 or self._height > 2048:
+                    import asyncio
+                    import io
+                    from PIL import Image
+                    def split():
+                        image = Image.open(io.BytesIO(data)); image.load()
+                        tiles = []
+                        for y in range(0, image.height, 2048):
+                            for x in range(0, image.width, 2048):
+                                part = image.crop((x, y, min(x+2048,image.width), min(y+2048,image.height)))
+                                output = io.BytesIO(); part.save(output, format="JPEG", quality=70)
+                                tiles.append((x,y,part.width,part.height,output.getvalue()))
+                        return tiles
+                    tiles = await asyncio.to_thread(split)
+                else:
+                    tiles = [(0,0,self._width,self._height,data)]
+            else:
+                tiles = data
+            async with self.__lock:
+                await self._write_struct("JPEG update", "BxH", 0, len(tiles), drain=False)
+                for x,y,w,h,jpeg in tiles:
+                    length = len(jpeg)
+                    assert w <= 2048 and h <= 2048 and length <= 4194303
+                    await self._write_struct("JPEG rectangle", "HHHHi", x,y,w,h,RfbEncodings.TIGHT,drain=False)
+                    packed = bytearray([0x9f])
+                    packed.append((length & 127) | (128 if length > 127 else 0))
+                    if length > 127:
+                        packed.append(((length >> 7) & 127) | (128 if length > 16383 else 0))
+                    if length > 16383:
+                        packed.append(length >> 14)
+                    await self._write_struct("JPEG payload", "", bytes(packed), jpeg)
+                self.__fb_reset_h264 = True
+                if self.__fb_cont_updates:
+                    self.__fb_notifier.notify()
+    ''')
     s=one(s, 'self.__symmap: dict[int, dict[int, int]] = {}',
           'self.__symmap: (dict[int, dict[int, int]] | None) = None')
     # Restrict the existing VeNCrypt negotiation; no new RFB implementation.
