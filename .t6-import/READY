@@ -1,0 +1,5 @@
+Source archive: t6-kvm-0.1.0-source-20260923.zip
+Source archive SHA256: 992580f5ded5545b4f6461d73c4a7cc96040e629d6ab1f9c1fa0790a08aef924
+Verified all 9 remote transfer blob IDs against the local payload.
+Expected source tree: 6d0e8748c93f012470672feefac51efd91a1442e
+Import the 64 original files with their executable permissions; no device deployment.
